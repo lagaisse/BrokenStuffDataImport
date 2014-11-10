@@ -1,0 +1,2 @@
+D:\appweb\xampp\php\php.exe .\sncf_gares_csv2sql.php
+D:\appweb\xampp\php\php.exe .\ratp_lignes_gares_csv2sql.php

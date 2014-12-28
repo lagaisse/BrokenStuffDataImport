@@ -8,8 +8,8 @@ require_once("./CsvParser.php");
 class RATPStationsGeolocNameParser extends CsvParser {
 
 	protected $_columns = array("station_id",
-								"lat",
 								"long",
+								"lat",
 								"nom",
 								"ville",
 								"reseau");

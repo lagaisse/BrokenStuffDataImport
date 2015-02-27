@@ -5,7 +5,7 @@ require_once("./SNCFGaresParser.php");
 require_once("./SNCFGaresGeolocParser.php");
 
 
-Config::reset();
+Config::restore();
 
 $fn2 = "D:/www/BrokenStuffDataImport/SNCF/sncf-lignes-par-gares-idf.csv";
 $parser2=new SNCFGaresParser();

@@ -17,32 +17,62 @@ class RATPStationsParser extends CsvParser {
 	protected $_string_enclosure = '';
 	protected $_separator="#";
 	protected $_fileoutput=null;
-	protected $_tofilename="D:/www/BrokenStuff/sql/006_RATPInsertLinesAndStations.sql";
 	protected $_firstline=true;
+	protected $_prefix="RATP_";
+	protected $_lignenb =1;
+	protected $_cpt =100;
 
 	public function preParse() {
-		$this->_fileoutput=fopen($this->_tofilename, "wb");
-		fwrite($this->_fileoutput, "USE `brokenstuff`;\n");
-		fwrite($this->_fileoutput, "insert into location (lo_code,lo_name,lo_path) VALUES\n");
+		$this->_cpt = Config::$_callperfile;
 	}
 	public function postParse() {
+
 		$query ="";
 		//print_r(Config::$_network);
 		foreach (Config::$_network as $cle => $valeur) {
 			if (trim($valeur['path'],"0")=="") continue;
-			$query .= ",\n('". $cle ."',";
+
+		if ($this->_cpt<=0||$this->_line_number==($this->_ignoreFirstLine ? 1:0)) {
+			if ($this->_fileoutput!=null)
+			{
+				fwrite($this->_fileoutput, Config::create_footer());
+				fclose($this->_fileoutput);
+			}
+			$this->_fileoutput=fopen(Config::getNextFilePath($this->_prefix), "wb");
+			$this->_cpt = Config::$_callperfile;
+			fwrite($this->_fileoutput, Config::create_header($this->_prefix));
+		}
+
+
+			$query = "insert into \".\$this->db->dbprefix('location').\" (lo_code,lo_name,lo_path) VALUES";
+			$query .= "('". $cle ."',";
 			$query .= "'". mysql_escape_string($valeur['lib'])."',";
 			$query .= "'". $valeur['path']."')";
+			fwrite($this->_fileoutput,"        \$ret=\$ret && \$this->db->simple_query(\"".$query."\");\n");
+			$this->_cpt--;
 		}
-		fwrite($this->_fileoutput,$query);
 
-		fwrite($this->_fileoutput, ";\ncommit;");	
+		fwrite($this->_fileoutput, Config::create_footer());
 		fclose($this->_fileoutput);
 	}
 	public function parseLine( $line) {
-		$query  = "";
-		
 
+		if ($this->_cpt<=0||$this->_line_number==($this->_ignoreFirstLine ? 1:0)) {
+			if ($this->_fileoutput!=null)
+			{
+				fwrite($this->_fileoutput, Config::create_footer());
+				fclose($this->_fileoutput);
+			}
+			$this->_fileoutput=fopen(Config::getNextFilePath($this->_prefix), "wb");
+			$this->_cpt = Config::$_callperfile;
+			fwrite($this->_fileoutput, Config::create_header($this->_prefix));
+		}
+
+
+
+
+
+		$query  = "";
 		//mise en cache des nouvelles lignes à la volée
 		//calcul des id et noms de lignes 
 		$num_ligne="". strtolower(substr($line['ligne'],0,strpos($line['ligne'], " ")));
@@ -72,11 +102,12 @@ class RATPStationsParser extends CsvParser {
 
 		if(!in_array($line['reseau'], Config::$_exception) && !in_array($ligne_id, Config::$_exception)) //do not import stations already provided by sncf (lignes A & B)or bus
 		{
-			$query .= (($this->_firstline) ? "":",\n"); $this->_firstline = false;
+			$query .= "insert into \".\$this->db->dbprefix('location').\" (lo_code,lo_name,lo_path) VALUES";
 			$query .= "('RATP:". $line['station_id'] ."',";
 			$query .= "'NONAME',";
 			$query .= "'". Config::getNextPath($ligne_id)."')";
-			fwrite($this->_fileoutput, $query);
+			fwrite($this->_fileoutput,"        \$ret=\$ret && \$this->db->simple_query(\"".$query."\");\n");
+			$this->_cpt--;
 		}
 
 		//if ($this->_line_number > 2) { die();}

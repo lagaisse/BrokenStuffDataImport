@@ -53,6 +53,16 @@ class Config
 
 	static protected $_savepath="./config.json";
 
+	static $_fileoffset = 1;
+	static $_filepadding = 5;
+
+	static $_filedir = "D:/www/BrokenStuff/application/migrations/";
+
+	static $_filename = "location_data";
+	static $_filenameext = ".php";
+
+	static $_callperfile=10;
+
     public static function getNextPath($key)
 	{
 		//echo $key."\n";
@@ -85,13 +95,26 @@ class Config
 		{
 			self::$_network[$id]= ['lib' => ucwords($name)  , 'path' => self::getNextPath($network) , 'cpt' => '000'];
 		}
-
 	}
+
+
+	public static function getNextFilePath($prefix='')
+	{
+		$offset= str_pad(++self::$_fileoffset, self::$_filepadding, "0", STR_PAD_LEFT);
+		return self::$_filedir.$offset.'_'.$prefix.self::$_filename.self::$_filenameext;
+	}
+
+	public static function getFilename()
+	{
+		$offset= str_pad(self::$_fileoffset, self::$_filepadding, "0", STR_PAD_LEFT);
+		return $offset.'_'.self::$_filename.self::$_filenameext;
+	}
+
 
     public static function save()
 	{
 		$f=fopen(self::$_savepath, "wb");
-		fwrite($f, json_encode(self::$_network,JSON_PRETTY_PRINT));
+		fwrite($f, json_encode(array('network'=>self::$_network,'filenb'=>self::$_fileoffset),JSON_PRETTY_PRINT));
 		fclose($f);
 		echo "config saved \n";
 
@@ -99,8 +122,15 @@ class Config
 
 	public static function restore()
 	{
-		self::$_network = json_decode(file_get_contents(self::$_savepath),true);
-		echo "config restored \n";
+		if (!file_exists(self::$_savepath)) {
+			self::reset();
+		}
+		else {
+			$aux = json_decode(file_get_contents(self::$_savepath),true);
+			self::$_network = $aux['network'];
+			self::$_fileoffset = $aux['filenb'];
+			echo "config restored \n";
+		}
 	}
 
 	public static function reset()
@@ -110,6 +140,31 @@ class Config
 		self::save();
 	}
 
-}
 
-?>
+
+	public static function create_header($prefix='') {
+		$filename=$prefix.ucfirst(Config::$_filename);
+		$header=<<<HEAD
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
+class Migration_{$filename} extends CI_Migration {
+    public function up(){
+        \$ret=true;
+
+HEAD;
+		return $header;
+	}
+
+	public static function create_footer() {
+		$footer=<<<FOOT
+
+		return \$ret;
+    }
+
+    public function down(){
+
+    }
+}
+FOOT;
+		return $footer;
+	}
+}

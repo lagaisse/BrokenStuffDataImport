@@ -101,13 +101,13 @@ class Config
 	public static function getNextFilePath($prefix='')
 	{
 		$offset= str_pad(++self::$_fileoffset, self::$_filepadding, "0", STR_PAD_LEFT);
-		return self::$_filedir.$offset.'_'.$prefix.self::$_filename.self::$_filenameext;
+		return self::$_filedir.$offset.'_'.$prefix.self::$_filename.'_'.$offset.self::$_filenameext;
 	}
 
 	public static function getFilename()
 	{
 		$offset= str_pad(self::$_fileoffset, self::$_filepadding, "0", STR_PAD_LEFT);
-		return $offset.'_'.self::$_filename.self::$_filenameext;
+		return $offset.'_'.self::$_filename.'_'.$offset.self::$_filenameext;
 	}
 
 
@@ -143,7 +143,7 @@ class Config
 
 
 	public static function create_header($prefix='') {
-		$filename=$prefix.ucfirst(Config::$_filename);
+		$filename=$prefix.ucfirst(Config::$_filename).'_'.str_pad(self::$_fileoffset, self::$_filepadding, "0", STR_PAD_LEFT);
 		$header=<<<HEAD
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 class Migration_{$filename} extends CI_Migration {

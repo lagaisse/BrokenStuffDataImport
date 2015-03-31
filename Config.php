@@ -54,14 +54,14 @@ class Config
 	static protected $_savepath="./config.json";
 
 	static $_fileoffset = 1;
-	static $_filepadding = 5;
+	static $_filepadding = 3;
 
-	static $_filedir = "D:/www/BrokenStuff/application/migrations/";
+	static $_filedir = "../BrokenStuff/application/migrations/";
 
 	static $_filename = "location_data";
 	static $_filenameext = ".php";
 
-	static $_callperfile=10;
+	static $_callperfile=30;
 
     public static function getNextPath($key)
 	{
